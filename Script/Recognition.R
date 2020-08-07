@@ -3,7 +3,7 @@ library(viridis)
 set.seed(18031)
 
 #Reading the data
-rfmm <- read.csv("C:\\Users\\nksay\\Desktop\\Reward Received to Analytics.csv")
+rfmm <- read.csv("C:\\Users\\nksay\\Documents\\Recognition\\Data\\Reward Received to Analytics.csv")
 head(rfmm)
 rfmm$Effort <- as.numeric(as.character((rfmm$Effort)))
 rfmm$Support <- as.numeric(as.character((rfmm$Support)))
@@ -13,7 +13,7 @@ rfmm <-na.omit(rfmm)
 aa <- rfmm
 str(aa)
 head(rfmm)
-#rfmm$ï..Leader <- NULL
+#rfmm$?..Leader <- NULL
 summary(rfmm)
 
 ## Scaling data
@@ -59,5 +59,4 @@ summary(clus4)
 nrow(clus4)
 
 # Writing this to a csv
-write.csv(a1, file = "kmeans6")
-getwd()
+write.csv(a1, "C:\\Users\\nksay\\Documents\\Recognition\\Output\\kmeans6.csv")
