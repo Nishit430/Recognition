@@ -13,8 +13,6 @@ rfmm <-na.omit(rfmm)
 aa <- rfmm
 str(aa)
 head(rfmm)
-#rfmm$?..Leader <- NULL
-summary(rfmm)
 
 ## Scaling data
 rfmm$Effort <- scale(rfmm$Effort)
