@@ -1,14 +1,14 @@
 library("ggplot2")
-library(viridis)
+library(RColorBrewer)
 library(dplyr)
 library(nnet)
+library(rcompanion)
 set.seed(18031)
 
 #Reading the data
-rfmm <- read.csv("./Data/Reward Received to Analytics.csv")
+rfmm <- read.csv("./Data/ManagerNominations.csv")
 head(rfmm)
 str(rfmm)
-rfmm$No..of.Times.Nominated <- as.numeric(rfmm$No..of.Times.Nominated)
 colSums(is.na(rfmm))
 aa <- rfmm
 str(aa)
@@ -18,38 +18,34 @@ rfmm <- rapply(rfmm, scale, class = c("numeric", "integer"), how = "replace")
 str(rfmm)
 
 ## Finding the optimum number of clusters
-nocl <- sum((nrow(rfmm[,c(-1,-6)])-1)*var(rfmm[,c(-1,-6)]))
+nocl <- sum((nrow(rfmm[,c(-1,-6,-7)])-1)*var(rfmm[,c(-1,-6,-7)]))
 for (i in 2:10) {
-  nocl[i] <- kmeans(rfmm[,c(-1,-6)], centers = i, iter.max = 1000)$tot.withinss
+  nocl[i] <- kmeans(rfmm[,c(-1,-6,-7)], centers = i, iter.max = 1000)$tot.withinss
 }
 nocl
 plot(1:10, nocl, type="b", xlab = "no. of clusters", ylab = "tot within")
 
 # 3 Clusters seem appropriate
-ak <- kmeans(rfmm[,c(-1,-6)], centers = 3, iter.max = 1000, nstart = 25)
+ak <- kmeans(rfmm[,c(-1,-6,-7)], centers = 3, iter.max = 1000, nstart = 25)
 a1 <- cbind(aa, ak$cluster)
 str(a1)
 
-# Box plot showing nominations vs efforts. There doesn't seem to be any correlation. But let's check the  cluster wise
-ggplot(aa, aes(y= Effort, x = as.factor(No..of.Times.Nominated), fill = as.factor(a1$No..of.Times.Nominated))) + geom_boxplot() + xlab("No. of nominations") + scale_fill_discrete(name = "")
-# Boxplot showing the distribution of the cluster
-ggplot(aa, aes(y= Effort, x = as.factor(No..of.Times.Nominated), fill = as.factor(a1$`ak$cluster`))) + geom_boxplot() + xlab("No. of nominations") + scale_fill_discrete(name = "Cluster")
+# Cluster analysis results
+ggplot(aa, aes(y= Effort, x = a1$X..Nomination, col = as.factor(a1$`ak$cluster`))) + geom_point(size = 2) + xlab("No. of nominations") + scale_color_brewer(palette = "Set1") + theme_minimal()
+ggsave("Clusterplot.png" , path = "./Output")
 
-
-# Checking if no .of nominations for clusters are different or not
-tbl = table(a1$`ak$cluster`, a1$No..of.Times.Nominated)
-tbl
-chisq.test(tbl)
+# way to test using multinomal regression
+a1$`ak$cluster` <- relevel(as.factor(a1$`ak$cluster`), ref = "2")
+test <- multinom(a1$`ak$cluster` ~ a1$X..Nomination)
+summary(test)
+z <- summary(test)$coefficients/summary(test)$standard.errors
+z
+p <- (1 - pnorm(abs(z), 0, 1))*2
+p # all p values are insignificant
 # There is no support that more usage of thanks can actually increase managerial effectiveness
 
-# Another way to test using multinomal regression
-# a1$`ak$cluster` <- relevel(as.factor(a1$`ak$cluster`), ref = "3")
-# test <- multinom(a1$`ak$cluster` ~ a1$No..of.Times.Nominated)
-# summary(test)
-# z <- summary(test)$coefficients/summary(test)$standard.errors
-# z
-# p <- (1 - pnorm(abs(z), 0, 1))*2
-# p # all p values are insignificant
+p <- (1 - pnorm(abs(z), 0, 1))*2
+p # all p values are insignificant
 
 clus1 <- subset(a1, a1$"ak$cluster"==1) ## This is read as subset of a1 where a1$column name is equal to 1
 summary(clus1)## This is cluster 1 of people who have have never been nominated and still have a mid level score of manager recognition
