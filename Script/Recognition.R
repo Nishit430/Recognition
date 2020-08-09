@@ -1,8 +1,6 @@
 library("ggplot2")
-library(RColorBrewer)
+library(wesanderson)
 library(dplyr)
-library(nnet)
-library(rcompanion)
 set.seed(18031)
 
 #Reading the data
@@ -25,14 +23,15 @@ for (i in 2:10) {
 nocl
 plot(1:10, nocl, type="b", xlab = "no. of clusters", ylab = "tot within")
 
-# 3 Clusters seem appropriate
-ak <- kmeans(rfmm[,c(-1,-6,-7)], centers = 3, iter.max = 1000, nstart = 25)
+# Try 3 or 4 clusters
+ak <- kmeans(rfmm[,c(-1,-6,-7)], centers = 4, iter.max = 1000, nstart = 25)
 a1 <- cbind(aa, ak$cluster)
 str(a1)
 
 # Cluster analysis results
-ggplot(aa, aes(y= Effort, x = a1$X..Nomination, col = as.factor(a1$`ak$cluster`))) + geom_point(size = 2) + xlab("No. of nominations") + scale_color_brewer(palette = "Set1") + theme_minimal()
+ggplot(aa, aes(y= Effort, x = (a1$X..Nomination*100), fill = as.factor(a1$`ak$cluster`))) + theme(legend.justification = c(1,0), legend.position=c(0.95, 0.05), legend.background = element_blank(), legend.key = element_blank()) + geom_point(size = 4, shape = 21, alpha = 1/4) + xlab("% of nominations") +labs(title = "% Nominations Vs Recognition of Effort",fill = "Cluster") + scale_colour_manual(values=wes_palette(name="Moonrise2")) 
 ggsave("Clusterplot.png" , path = "./Output")
+# ?rainbow
 
 # way to test using multinomal regression
 a1$`ak$cluster` <- relevel(as.factor(a1$`ak$cluster`), ref = "2")
@@ -44,8 +43,9 @@ p <- (1 - pnorm(abs(z), 0, 1))*2
 p # all p values are insignificant
 # There is no support that more usage of thanks can actually increase managerial effectiveness
 
-p <- (1 - pnorm(abs(z), 0, 1))*2
-p # all p values are insignificant
+# Don't run it after the multinomal regression
+# a1$`ak$cluster` <- as.numeric(a1$`ak$cluster`)
+# t.test(a1[a1$`ak$cluster` %in% c(2),2],a1[a1$`ak$cluster` == 3, 2])
 
 clus1 <- subset(a1, a1$"ak$cluster"==1) ## This is read as subset of a1 where a1$column name is equal to 1
 summary(clus1)## This is cluster 1 of people who have have never been nominated and still have a mid level score of manager recognition
